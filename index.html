@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeoGuessr France</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #111;
+      color: white;
+      overflow: hidden;
+    }
+
+    #street-view {
+      width: 100%;
+      height: 70vh;
+    }
+
+    #map {
+      width: 100%;
+      height: 30vh;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: rgba(0,0,0,0.8);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #00b894;
+      color: white;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #00a383;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h2>🇫🇷 GeoGuessr France</h2>
+  <p id="score">Score : 0</p>
+  <button onclick="validateGuess()">Valider</button>
+</div>
+
+<div id="street-view"></div>
+<div id="map"></div>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAkqWejSA0mknEaDvxwUOetNWNrf007zGo&libraries=geometry"></script>
+
+<script>
+  let map;
+  let marker;
+  let panorama;
+  let selectedLatLng = null;
+  let realPosition = null;
+  let score = 0;
+
+  // Coordonnées aléatoires en France
+  const franceLocations = [
+    { lat: 48.8566, lng: 2.3522 }, // Paris
+    { lat: 43.2965, lng: 5.3698 }, // Marseille
+    { lat: 45.7640, lng: 4.8357 }, // Lyon
+    { lat: 50.6292, lng: 3.0573 }, // Lille
+    { lat: 48.5734, lng: 7.7521 }, // Strasbourg
+    { lat: 43.6047, lng: 1.4442 }, // Toulouse
+    { lat: 44.8378, lng: -0.5792 }, // Bordeaux
+    { lat: 47.2184, lng: -1.5536 }, // Nantes
+    { lat: 43.7102, lng: 7.2620 }, // Nice
+    { lat: 49.2583, lng: 4.0317 } // Reims
+  ];
+
+  function randomLocation() {
+    return franceLocations[
+      Math.floor(Math.random() * franceLocations.length)
+    ];
+  }
+
+  function initGame() {
+
+    // Carte Leaflet
+    map = L.map('map').setView([46.603354, 1.888334], 5);
+
+    L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution: '&copy; OpenStreetMap contributors'
+      }
+    ).addTo(map);
+
+    map.on('click', function(e) {
+
+      selectedLatLng = e.latlng;
+
+      if (marker) {
+        map.removeLayer(marker);
+      }
+
+      marker = L.marker(e.latlng).addTo(map);
+    });
+
+    startRound();
+  }
+
+  function startRound() {
+
+    const location = randomLocation();
+
+    realPosition = new google.maps.LatLng(
+      location.lat,
+      location.lng
+    );
+
+    panorama = new google.maps.StreetViewPanorama(
+      document.getElementById("street-view"),
+      {
+        position: realPosition,
+        pov: {
+          heading: 34,
+          pitch: 10
+        },
+        zoom: 1,
+        addressControl: false,
+        linksControl: true,
+        panControl: true,
+        enableCloseButton: false
+      }
+    );
+  }
+
+  function validateGuess() {
+
+    if (!selectedLatLng) {
+      alert("Clique sur la carte !");
+      return;
+    }
+
+    const guess = new google.maps.LatLng(
+      selectedLatLng.lat,
+      selectedLatLng.lng
+    );
+
+    const distance =
+      google.maps.geometry.spherical.computeDistanceBetween(
+        realPosition,
+        guess
+      );
+
+    const distanceKm = (distance / 1000).toFixed(2);
+
+    let points = Math.max(0, 5000 - Math.floor(distanceKm));
+
+    score += points;
+
+    alert(
+      `Distance : ${distanceKm} km\n` +
+      `Points gagnés : ${points}`
+    );
+
+    document.getElementById("score").innerText =
+      "Score : " + score;
+
+    if (marker) {
+      map.removeLayer(marker);
+    }
+
+    selectedLatLng = null;
+
+    startRound();
+  }
+
+  window.onload = initGame;
+</script>
+
+</body>
+</html>
