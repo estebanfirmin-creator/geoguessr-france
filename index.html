@@ -443,10 +443,15 @@ function validateGuess(){
 
   // BON POINT
 
-  realMarker = L.marker([
-    realPosition.lat(),
-    realPosition.lng()
-  ]).addTo(map);
+  realMarker = L.circleMarker([
+  realPosition.lat(),
+  realPosition.lng()
+], {
+  radius: 10,
+  color: "green",
+  fillColor: "green",
+  fillOpacity: 1
+}).addTo(map);
 
   // LIGNE
 
