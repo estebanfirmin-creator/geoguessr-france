@@ -1,1 +1,1 @@
-# geoguessr-france
+# FranceGuessr
