@@ -316,6 +316,8 @@ onclick="resetPosition()">
 
     measurementId: "G-7NX61P86N8"
 
+  // =====================
+
   };
 
 
@@ -324,6 +326,82 @@ onclick="resetPosition()">
   const app = initializeApp(firebaseConfig);
 
   const analytics = getAnalytics(app);
+
+let currentRoom = null;
+
+let map;
+let panorama;
+
+let selectedLatLng = null;
+let realPosition = null;
+
+let playerMarker;
+let realMarker;
+let line;
+
+const streetViewService =
+new google.maps.StreetViewService();
+
+function generateRoomCode(){
+
+  return Math.random()
+  .toString(36)
+  .substring(2,8)
+  .toUpperCase();
+
+}
+
+window.createRoom = async function(){
+
+  const code =
+  generateRoomCode();
+
+  currentRoom = code;
+
+  const location =
+  await randomLocation();
+
+  await set(
+    ref(db, "rooms/" + code),
+    {
+      location:location,
+      started:true
+    }
+  );
+
+  alert("Code : " + code);
+
+  loadLocation(location);
+
+}
+
+window.joinRoom = function(){
+
+  const code =
+  document.getElementById(
+    "room-code"
+  ).value;
+
+  currentRoom = code;
+
+  onValue(
+    ref(db, "rooms/" + code),
+    (snapshot) => {
+
+      const data = snapshot.val();
+
+      if(data && data.location){
+
+        loadLocation(
+          data.location
+        );
+
+      }
+
+    }
+  );
+
+}
 
 </script>
 
