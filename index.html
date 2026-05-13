@@ -906,7 +906,17 @@ if(multiplayer){
   db.ref(
     "rooms/" + currentRoom +
     "/guesses/" + playerName
-  ).set(distanceKm);
+  ).transaction((current) => {
+
+  if(current === null){
+
+    return distanceKm;
+
+  }
+
+  return;
+
+});
 
   waitAllPlayers();
 
@@ -1146,6 +1156,22 @@ async function joinRoom(){
   const snapshot =
     await roomRef.once("value");
 
+const roomData =
+  snapshot.val();
+
+const playerCount =
+  Object.keys(
+    roomData.players || {}
+  ).length;
+
+if(playerCount >= 5){
+
+  alert("Partie pleine");
+
+  return;
+
+}
+
   if(snapshot.exists()){
 
     currentRoom = code;
@@ -1156,6 +1182,18 @@ async function joinRoom(){
       "players/" + playerName
     ).set(true);
 
+if(
+  roomData.players &&
+  roomData.players[playerName]
+){
+
+  alert(
+    "Pseudo déjà utilisé"
+  );
+
+  return;
+
+}
     showLobby();
 
   } else {
@@ -1337,4 +1375,3 @@ window.onload = initGame;
 
 </body>
 </html>
-
