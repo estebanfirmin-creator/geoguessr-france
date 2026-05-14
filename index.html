@@ -962,25 +962,7 @@ if(multiplayer){
   db.ref(
     "rooms/" + currentRoom +
     "/guesses/" + playerName
-  ).transaction((current) => {
-
-    if(current === null){
-
-      return distanceKm;
-
-    }
-
-    return;
-
-  });
-
-  waitAllPlayers();
-
-  return;
-
-}
-
-});
+  ).set(distanceKm);
 
   waitAllPlayers();
 
@@ -1252,6 +1234,14 @@ async function joinRoom(){
 const roomData =
   snapshot.val();
 
+if(!snapshot.exists()){
+
+  alert("Partie introuvable");
+
+  return;
+
+}
+
 const playerCount =
   Object.keys(
     roomData.players || {}
@@ -1264,8 +1254,6 @@ if(playerCount >= 5){
   return;
 
 }
-
-  if(snapshot.exists()){
 
     currentRoom = code;
 
@@ -1429,30 +1417,25 @@ function listenGameStart(){
 
 }
 
-document.getElementById(
-  "room-code"
-).style.display = "none";
+if(room.started){
 
-document.getElementById(
-  "leave-room-btn"
-).style.display = "block";
+  document.getElementById(
+    "room-code"
+  ).style.display = "none";
 
-document.getElementById(
-  "waiting-host"
-).style.display = "none";
+  document.getElementById(
+    "leave-room-btn"
+  ).style.display = "block";
 
-document.getElementById(
-  "leave-room-btn"
-).style.display = "block";
+  document.getElementById(
+    "start-game-btn"
+  ).style.display = "none";
 
-document.getElementById(
-  "start-game-btn"
-).style.display = "none";
+  document.getElementById(
+    "waiting-host"
+  ).style.display = "none";
 
-document.getElementById(
-  "waiting-host"
-).style.display = "none";
-
+}
       
   });
 
