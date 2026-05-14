@@ -320,6 +320,7 @@
   gap:25px;
 
 }
+
 .multi-btn{
 
   width:100%;
@@ -953,20 +954,31 @@ function validateGuess(){
 
   const distanceKm =
     (distance / 1000).toFixed(2);
+
 if(multiplayer){
+
+  roundEnded = true;
 
   db.ref(
     "rooms/" + currentRoom +
     "/guesses/" + playerName
   ).transaction((current) => {
 
-  if(current === null){
+    if(current === null){
 
-    return distanceKm;
+      return distanceKm;
 
-  }
+    }
+
+    return;
+
+  });
+
+  waitAllPlayers();
 
   return;
+
+}
 
 });
 
@@ -1125,20 +1137,37 @@ function showTeamResult(player, distance){
   if(!isHost){
 
   document.getElementById(
-    "start-game-btn"
+    "continue-btn"
   ).style.display = "none";
 
   document.getElementById(
     "waiting-host"
   ).style.display = "block";
 
+  document.getElementById(
+    "waiting-host"
+  ).style.background =
+    "#444";
+
+  document.getElementById(
+    "waiting-host"
+  ).style.padding =
+    "18px";
+
+  document.getElementById(
+    "waiting-host"
+  ).style.borderRadius =
+    "14px";
+
+  openMultiplayerMenu();
+
 } else {
 
-    document.getElementById(
-      "continue-btn"
-    ).style.display = "block";
+  document.getElementById(
+    "continue-btn"
+  ).style.display = "block";
 
-  }
+}
 
 }
 
@@ -1159,7 +1188,15 @@ function nextRound(){
 
   recenterFrance();
 
+  if(multiplayer){
+
+  nextMultiplayerRound();
+
+} else {
+
   startRound();
+
+}
 
 }
 
@@ -1277,11 +1314,15 @@ function showLobby(){
 
   if(!isHost){
 
-    document.getElementById(
-      "start-game-btn"
-    ).style.display = "none";
+  document.getElementById(
+    "start-game-btn"
+  ).style.display = "none";
 
-  }
+  document.getElementById(
+    "waiting-host"
+  ).style.display = "block";
+
+}
 
   listenPlayers();
 
@@ -1328,16 +1369,21 @@ const players =
       div.className =
         "player-item";
 
-      if(name === playerName){
+      let text = name;
 
-        div.innerHTML =
-          name + " (toi)";
+if(name === room.host){
 
-      } else {
+  text += " (hôte)";
 
-        div.innerHTML = name;
+}
 
-      }
+if(name === playerName){
+
+  text += " (toi)";
+
+}
+
+div.innerHTML = text;
 
       playersList.appendChild(div);
 
@@ -1373,7 +1419,28 @@ function listenGameStart(){
     const room =
       snapshot.val();
 
-    if(room.started){
+    if(room.started && room.location){
+
+  closeMultiplayerMenu();
+
+  startSharedRound(
+    room.location
+  );
+
+}
+
+document.getElementById(
+  "room-code"
+).style.display = "none";
+
+document.getElementById(
+  "leave-room-btn"
+).style.display = "block";
+
+document.getElementById(
+  "waiting-host"
+).style.display = "none";
+
 document.getElementById(
   "leave-room-btn"
 ).style.display = "block";
@@ -1386,14 +1453,7 @@ document.getElementById(
   "waiting-host"
 ).style.display = "none";
 
-      closeMultiplayerMenu();
-
-      startSharedRound(
-        room.location
-      );
-
-    }
-
+      
   });
 
 }
@@ -1446,10 +1506,6 @@ async function leaveRoom(){
 
     await roomRef.remove();
 
-    alert(
-      "La partie a été supprimée"
-    );
-
   } else {
 
     await roomRef.child(
@@ -1501,6 +1557,26 @@ function closeMultiplayerMenu(){
   document.getElementById(
     "multiplayer-menu"
   ).style.display = "none";
+
+}
+
+async function nextMultiplayerRound(){
+
+  const location =
+    await randomLocation();
+
+  await db.ref(
+    "rooms/" + currentRoom
+  ).update({
+
+    location:location,
+
+    guesses:{}
+
+  });
+
+  resultBox.style.display =
+    "none";
 
 }
 
