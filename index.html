@@ -320,7 +320,6 @@
   gap:25px;
 
 }
-
 .multi-btn{
 
   width:100%;
@@ -931,10 +930,6 @@ async function startRound(){
 
 function validateGuess(){
 
-  if(roundEnded){
-    return;
-  }
-
   if(!selectedLatLng){
 
     alert("Clique sur la map");
@@ -958,88 +953,30 @@ function validateGuess(){
 
   const distanceKm =
     (distance / 1000).toFixed(2);
+if(multiplayer){
 
-  /* MULTIJOUEUR */
+  db.ref(
+    "rooms/" + currentRoom +
+    "/guesses/" + playerName
+  ).transaction((current) => {
 
-  if(multiplayer){
+  if(current === null){
 
-    roundEnded = true;
-
-    db.ref(
-      "rooms/" +
-      currentRoom +
-      "/guesses/" +
-      playerName
-    ).set(distanceKm);
-
-    waitAllPlayers();
-
-    return;
+    return distanceKm;
 
   }
 
-  /* SOLO */
+  return;
 
-  roundEnded = true;
+});
 
-  mapContainer.classList.add(
-    "fullscreen"
-  );
+  waitAllPlayers();
 
-  document.getElementById(
-    "controls"
-  ).style.display = "none";
-
-  document.getElementById(
-    "reset-position-btn"
-  ).style.display = "none";
-
-  setTimeout(() => {
-    map.invalidateSize();
-  }, 500);
-
-  realMarker = L.circleMarker([
-    realPosition.lat(),
-    realPosition.lng()
-  ], {
-
-    radius:10,
-
-    color:"green",
-
-    fillColor:"green",
-
-    fillOpacity:1
-
-  }).addTo(map);
-
-  line = L.polyline([
-    [
-      selectedLatLng.lat,
-      selectedLatLng.lng
-    ],
-    [
-      realPosition.lat(),
-      realPosition.lng()
-    ]
-  ]).addTo(map);
-
-  map.fitBounds(
-    line.getBounds(),
-    {
-      padding:[100,100]
-    }
-  );
-
-  distanceText.innerHTML =
-    "Bravo : " +
-    distanceKm +
-    " km";
-
-  resultBox.style.display =
-    "block";
+  return;
 
 }
+
+  roundEnded = true;
 
   /* FULLSCREEN */
 
@@ -1188,37 +1125,20 @@ function showTeamResult(player, distance){
   if(!isHost){
 
   document.getElementById(
-    "continue-btn"
+    "start-game-btn"
   ).style.display = "none";
 
   document.getElementById(
     "waiting-host"
   ).style.display = "block";
 
-  document.getElementById(
-    "waiting-host"
-  ).style.background =
-    "#444";
-
-  document.getElementById(
-    "waiting-host"
-  ).style.padding =
-    "18px";
-
-  document.getElementById(
-    "waiting-host"
-  ).style.borderRadius =
-    "14px";
-
-  openMultiplayerMenu();
-
 } else {
 
-  document.getElementById(
-    "continue-btn"
-  ).style.display = "block";
+    document.getElementById(
+      "continue-btn"
+    ).style.display = "block";
 
-}
+  }
 
 }
 
@@ -1239,15 +1159,7 @@ function nextRound(){
 
   recenterFrance();
 
-  if(multiplayer){
-
-  nextMultiplayerRound();
-
-} else {
-
   startRound();
-
-}
 
 }
 
@@ -1303,14 +1215,6 @@ async function joinRoom(){
 const roomData =
   snapshot.val();
 
-if(!snapshot.exists()){
-
-  alert("Partie introuvable");
-
-  return;
-
-}
-
 const playerCount =
   Object.keys(
     roomData.players || {}
@@ -1323,6 +1227,8 @@ if(playerCount >= 5){
   return;
 
 }
+
+  if(snapshot.exists()){
 
     currentRoom = code;
 
@@ -1371,15 +1277,11 @@ function showLobby(){
 
   if(!isHost){
 
-  document.getElementById(
-    "start-game-btn"
-  ).style.display = "none";
+    document.getElementById(
+      "start-game-btn"
+    ).style.display = "none";
 
-  document.getElementById(
-    "waiting-host"
-  ).style.display = "block";
-
-}
+  }
 
   listenPlayers();
 
@@ -1426,21 +1328,16 @@ const players =
       div.className =
         "player-item";
 
-      let text = name;
+      if(name === playerName){
 
-if(name === room.host){
+        div.innerHTML =
+          name + " (toi)";
 
-  text += " (hôte)";
+      } else {
 
-}
+        div.innerHTML = name;
 
-if(name === playerName){
-
-  text += " (toi)";
-
-}
-
-div.innerHTML = text;
+      }
 
       playersList.appendChild(div);
 
@@ -1471,39 +1368,29 @@ function listenGameStart(){
 
   db.ref(
     "rooms/" + currentRoom
-  ).on("value", (snapshot) => {
+  ).on("value", async (snapshot) => {
 
-    const room = snapshot.val();
+    const room =
+      snapshot.val();
 
-    if(!room){
-      return;
-    }
+    if(room.started){
+document.getElementById(
+  "leave-room-btn"
+).style.display = "block";
 
-    /* PARTIE COMMENCÉE */
+document.getElementById(
+  "start-game-btn"
+).style.display = "none";
 
-    if(room.started && room.location){
+document.getElementById(
+  "waiting-host"
+).style.display = "none";
 
       closeMultiplayerMenu();
 
       startSharedRound(
         room.location
       );
-
-      document.getElementById(
-        "room-code"
-      ).style.display = "none";
-
-      document.getElementById(
-        "leave-room-btn"
-      ).style.display = "block";
-
-      document.getElementById(
-        "start-game-btn"
-      ).style.display = "none";
-
-      document.getElementById(
-        "waiting-host"
-      ).style.display = "none";
 
     }
 
@@ -1559,6 +1446,10 @@ async function leaveRoom(){
 
     await roomRef.remove();
 
+    alert(
+      "La partie a été supprimée"
+    );
+
   } else {
 
     await roomRef.child(
@@ -1613,32 +1504,9 @@ function closeMultiplayerMenu(){
 
 }
 
-async function nextMultiplayerRound(){
-
-  const location =
-    await randomLocation();
-
-  await db.ref(
-    "rooms/" + currentRoom
-  ).update({
-
-    location:location,
-
-    guesses:{}
-
-  });
-
-  resultBox.style.display =
-    "none";
-
-}
-
-console.log("SCRIPT OK");
-
 window.onload = initGame;
 
 </script>
 
 </body>
 </html>
-
