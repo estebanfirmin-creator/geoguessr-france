@@ -507,21 +507,6 @@ onclick="resetPosition()">
       CODE
     </div>
 
-    <div
-id="waiting-host"
-style="
-display:none;
-color:white;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-margin-bottom:10px;
-">
-
-  En attente de l’hôte...
-
-</div>
-
 <button
 id="start-game-btn"
 class="multi-btn"
@@ -1128,10 +1113,6 @@ function showTeamResult(player, distance){
     "start-game-btn"
   ).style.display = "none";
 
-  document.getElementById(
-    "waiting-host"
-  ).style.display = "block";
-
 } else {
 
     document.getElementById(
@@ -1322,26 +1303,26 @@ const players =
 
     for(let name in players){
 
-      const div =
-        document.createElement("div");
+  const div =
+    document.createElement("div");
 
-      div.className =
-        "player-item";
+  div.className =
+    "player-item";
 
-      if(name === playerName){
+  if(name === playerName){
 
-        div.innerHTML =
-          name + " (toi)";
+    div.innerHTML =
+      name + " (toi)";
 
-      } else {
+  } else {
 
-        div.innerHTML = name;
+    div.innerHTML = name;
 
-      }
+  }
 
-      playersList.appendChild(div);
+  playersList.appendChild(div);
 
-    }
+}
 
   });
 
@@ -1380,10 +1361,6 @@ document.getElementById(
 
 document.getElementById(
   "start-game-btn"
-).style.display = "none";
-
-document.getElementById(
-  "waiting-host"
 ).style.display = "none";
 
       closeMultiplayerMenu();
