@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -592,6 +592,7 @@ let map;
 let playerMarker;
 let realMarker;
 let line;
+let multiplayerLayers = [];
 
 let panorama;
 
@@ -1157,10 +1158,12 @@ if(isHost){
     /* POINT JOUEUR */
 
     const marker =
-      L.marker([
-        guess.lat,
-        guess.lng
-      ]).addTo(map);
+  L.marker([
+    guess.lat,
+    guess.lng
+  ]).addTo(map);
+
+multiplayerLayers.push(marker);
 
     /* NOM */
 
@@ -1176,16 +1179,19 @@ if(isHost){
 
     /* LIGNE */
 
-    L.polyline([
-      [
-        guess.lat,
-        guess.lng
-      ],
-      [
-        realPosition.lat(),
-        realPosition.lng()
-      ]
-    ]).addTo(map);
+    const playerLine =
+  L.polyline([
+    [
+      guess.lat,
+      guess.lng
+    ],
+    [
+      realPosition.lat(),
+      realPosition.lng()
+    ]
+  ]).addTo(map);
+
+multiplayerLayers.push(playerLine);
 
   }
 
@@ -1516,6 +1522,11 @@ if(line)
   map.removeLayer(line);
 
 selectedLatLng = null;
+multiplayerLayers.forEach(layer => {
+  map.removeLayer(layer);
+});
+
+multiplayerLayers = [];
 
 document.getElementById(
   "controls"
