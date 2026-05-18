@@ -965,6 +965,10 @@ document.querySelector(
   '#controls button:last-child'
 ).disabled = true;
 
+panorama.setOptions({
+  disableDefaultUI:true
+});
+
 waitAllPlayers();
 
 return;
@@ -1161,6 +1165,10 @@ if(isHost){
 
   /* TOUS LES JOUEURS */
 
+if(playerMarker){
+  map.removeLayer(playerMarker);
+}
+
   for(let name in guesses){
 
     const guess =
@@ -1168,11 +1176,25 @@ if(isHost){
 
     /* POINT JOUEUR */
 
-    const marker =
-  L.marker([
+    let marker;
+
+if(name === playerName){
+
+  marker = L.marker([
     guess.lat,
     guess.lng
   ]).addTo(map);
+
+  playerMarker = marker;
+
+} else {
+
+  marker = L.marker([
+    guess.lat,
+    guess.lng
+  ]).addTo(map);
+
+}
 
 multiplayerLayers.push(marker);
 
@@ -1581,6 +1603,9 @@ mapContainer.classList.remove(
         fullscreenControl:false
       }
     );
+panorama.setOptions({
+  disableDefaultUI:false
+});
 
 }
 
