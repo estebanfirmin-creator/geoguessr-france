@@ -965,8 +965,8 @@ if(multiplayer){
   });
 
   document.querySelector(
-    '#controls button:last-child'
-  ).disabled = true;
+  '#controls button:last-child'
+).style.display = "none";
 
   waitAllPlayers();
 
@@ -1552,7 +1552,7 @@ async function startSharedRound(location){
 
 document.querySelector(
   '#controls button:last-child'
-).disabled = false;
+).style.display = "block";
 
 if(playerMarker)
   map.removeLayer(playerMarker);
@@ -1576,7 +1576,7 @@ document.getElementById(
 
 document.querySelector(
   '#controls button:last-child'
-).disabled = false;
+).style.display = "block";
 
 document.getElementById(
   "reset-position-btn"
