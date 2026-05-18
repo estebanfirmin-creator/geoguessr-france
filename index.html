@@ -957,6 +957,10 @@ if(multiplayer){
 
   roundEnded = true;
 
+if(playerMarker){
+  multiplayerLayers.push(playerMarker);
+}
+
 document.querySelector(
   '#controls button:last-child'
 ).disabled = true;
