@@ -614,12 +614,6 @@ let validatedPlayers = {};
 
 let hasValidated = false;
 
-let currentRoundId = 0;
-
-let currentRound = 1;
-
-const maxRounds = 5;
-
 const mapContainer =
   document.getElementById("map-container");
 
@@ -1270,120 +1264,38 @@ async function nextRound(){
   if(line)
     map.removeLayer(line);
 
-  map.eachLayer((layer) => {
-
-    if(
-      layer instanceof L.Marker &&
-      layer !== playerMarker
-    ){
-
-      map.removeLayer(layer);
-
-    }
-
-    if(
-      layer instanceof L.Polyline
-    ){
-
-      map.removeLayer(layer);
-
-    }
-
-  });
-
   selectedLatLng = null;
 
   recenterFrance();
 
-  resultBox.style.display = "none";
+  /* SOLO */
 
-  if(multiplayer){
+  if(!multiplayer){
 
-    if(isHost){
-
-      if(currentRound >= maxRounds){
-
-        await db.ref(
-          "rooms/" + currentRoom
-        ).remove();
-
-        alert(
-          "La partie est terminée"
-        );
-
-        window.location.reload();
-
-        return;
-
-      }
-
-      const newLocation =
-        await randomLocation();
-
-      await db.ref(
-        "rooms/" + currentRoom
-      ).update({
-
-        location: newLocation,
-
-        guesses: {},
-
-        roundId: Date.now(),
-
-        currentRound:
-          currentRound + 1
-
-      });
-
-    }
+    startRound();
 
     return;
 
   }
-
-  startRound();
-
-}
 
   /* MULTIJOUEUR */
 
   if(isHost){
 
-  /* FIN DE PARTIE */
-
-  if(currentRound >= maxRounds){
+    const location =
+      await randomLocation();
 
     await db.ref(
       "rooms/" + currentRoom
-    ).remove();
+    ).update({
 
-    alert(
-      "La partie est terminée"
-    );
+      location: location,
 
-    window.location.reload();
+      guesses: {}
 
-    return;
+    });
 
   }
-
-  const newLocation =
-    await randomLocation();
-
-  await db.ref(
-    "rooms/" + currentRoom
-  ).update({
-
-    location: newLocation,
-
-    guesses: {},
-
-    roundId: Date.now(),
-
-    currentRound:
-      currentRound + 1
-
-  });
 
 }
 
@@ -1524,9 +1436,13 @@ function listenPlayers(){
 
 if(!room){
 
-  alert(
-    "La partie est terminée"
-  );
+  if(!isHost){
+
+    alert(
+      "L’hôte a quitté la partie\nLa partie a été supprimée"
+    );
+
+  }
 
   location.reload();
 
@@ -1576,7 +1492,7 @@ div.innerHTML = name + tags;
 
 async function startMultiplayerGame(){
 
-  const newLocation =
+  const location =
     await randomLocation();
 
   await db.ref(
@@ -1585,11 +1501,7 @@ async function startMultiplayerGame(){
 
     started:true,
 
-    location:newLocation,
-
-    roundId: Date.now(),
-
-    currentRound:1
+    location:location
 
   });
 
@@ -1604,19 +1516,7 @@ function listenGameStart(){
     const room =
       snapshot.val();
 
-    if(
-      room &&
-      room.started &&
-      room.location &&
-      room.roundId &&
-      room.roundId !== currentRoundId
-    ){
-
-      currentRoundId =
-        room.roundId;
-
-      currentRound =
-        room.currentRound || 1;
+    if(room.started && room.location && !hasValidated){
 
       document.getElementById(
         "leave-room-btn"
@@ -1628,9 +1528,13 @@ function listenGameStart(){
 
       closeMultiplayerMenu();
 
-      startSharedRound(
-        room.location
-      );
+   if(!roundEnded){
+
+  startSharedRound(
+    room.location
+  );
+
+}
 
     }
 
