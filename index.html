@@ -1306,14 +1306,14 @@ async function nextRound(){
 
   }
 
-  const location =
-    await randomLocation();
+  const newLocation =
+  await randomLocation();
 
   await db.ref(
     "rooms/" + currentRoom
   ).update({
 
-    location: location,
+    location: newLocation,
 
     guesses: {},
 
