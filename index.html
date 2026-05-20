@@ -1270,19 +1270,80 @@ async function nextRound(){
   if(line)
     map.removeLayer(line);
 
+  map.eachLayer((layer) => {
+
+    if(
+      layer instanceof L.Marker &&
+      layer !== playerMarker
+    ){
+
+      map.removeLayer(layer);
+
+    }
+
+    if(
+      layer instanceof L.Polyline
+    ){
+
+      map.removeLayer(layer);
+
+    }
+
+  });
+
   selectedLatLng = null;
 
   recenterFrance();
 
-  /* SOLO */
+  resultBox.style.display = "none";
 
-  if(!multiplayer){
+  if(multiplayer){
 
-    startRound();
+    if(isHost){
+
+      if(currentRound >= maxRounds){
+
+        await db.ref(
+          "rooms/" + currentRoom
+        ).remove();
+
+        alert(
+          "La partie est terminée"
+        );
+
+        window.location.reload();
+
+        return;
+
+      }
+
+      const newLocation =
+        await randomLocation();
+
+      await db.ref(
+        "rooms/" + currentRoom
+      ).update({
+
+        location: newLocation,
+
+        guesses: {},
+
+        roundId: Date.now(),
+
+        currentRound:
+          currentRound + 1
+
+      });
+
+    }
 
     return;
 
   }
+
+  startRound();
+
+}
 
   /* MULTIJOUEUR */
 
@@ -1535,8 +1596,6 @@ async function startMultiplayerGame(){
 }
 
 function listenGameStart(){
-
-  function listenGameStart(){
 
   db.ref(
     "rooms/" + currentRoom
